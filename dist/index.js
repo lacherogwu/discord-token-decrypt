@@ -78,11 +78,58 @@ function decrypt(encryptedValue, password) {
   return decrypted.toString().trim();
 }
 
+// src/utils.ts
+function getSystemTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 // src/index.ts
 async function getDiscordToken() {
   const [rawToken, key] = await Promise.all([getDiscordRawToken(), getEncryptionKey()]);
   return decrypt(rawToken, key);
 }
+async function getDiscordRequestHeaders() {
+  const token = await getDiscordToken();
+  const superProperties = Buffer.from(
+    JSON.stringify({
+      os: "Mac OS X",
+      browser: "Discord Client",
+      release_channel: "stable",
+      client_version: "0.0.340",
+      os_version: "24.3.0",
+      os_arch: "arm64",
+      app_arch: "arm64",
+      system_locale: "en-US",
+      has_client_mods: false,
+      browser_user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.340 Chrome/130.0.6723.191 Electron/33.4.0 Safari/537.36",
+      browser_version: "33.4.0",
+      os_sdk_version: "24",
+      client_build_number: 375018,
+      native_build_number: null,
+      client_event_source: null
+    })
+  ).toString("base64");
+  return {
+    Accept: "*/*",
+    Origin: "https://discord.com",
+    "Accept-Language": "en-US",
+    Authorization: `Bearer ${token}`,
+    "X-Debug-Options": "bugReporterEnabled",
+    Connection: "keep-alive",
+    Referer: "https://discord.com/",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) discord/0.0.340 Chrome/130.0.6723.191 Electron/33.4.0 Safari/537.36",
+    "X-Discord-Locale": "en-US",
+    "X-Discord-Timezone": getSystemTimezone(),
+    "X-Super-Properties": superProperties,
+    "sec-ch-ua": 'Not?A_Brand";v="99", "Chromium";v="130"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "macOS"
+  };
+}
 export {
+  getDiscordRequestHeaders,
   getDiscordToken
 };
