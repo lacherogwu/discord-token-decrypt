@@ -3,7 +3,7 @@ import { DISCORD_LEVELDB_PATH, DISCORD_LEVELSDB_TEMP_PATH, DISCORD_TOKEN_KEY } f
 import fs from 'node:fs/promises';
 
 export async function getDiscordRawToken() {
-	// TODO: maybe implement folder caching instead of copied every time using hash
+	// TODO: Implement folder caching instead of copying every time.
 	await copyFolder(DISCORD_LEVELDB_PATH, DISCORD_LEVELSDB_TEMP_PATH);
 
 	const db = new Level(DISCORD_LEVELSDB_TEMP_PATH);
