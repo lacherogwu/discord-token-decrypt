@@ -24,22 +24,25 @@ export async function getDiscordToken() {
 }
 
 /**
- * Retrieves the headers required to make authenticated requests to Discord's API.
+ * Provides HTTP headers that mimic an official Discord client request.
  *
- * This function will retrieve the Discord token, generate the super properties, and return
- * the headers required to make authenticated requests to Discord's API.
+ * This function generates headers similar to those sent by the Discord desktop app,
+ * including a properly formatted X-Super-Properties value containing client information
+ * and system details encoded in base64.
  *
- * @returns A promise that resolves to an object containing the required headers
- * @throws {Error} If the Discord token cannot be retrieved
+ * @returns An object containing HTTP headers for Discord API requests
  *
  * @example
- * // Get the Discord request headers
- * const headers = await getDiscordRequestHeaders();
- * console.log(headers);
+ * // Use with fetch to make authenticated Discord API requests
+ * const headers = getDiscorBasedRequestHeaders();
+ * // Add your authorization token
+ * headers.Authorization = `${await getDiscordToken()}`;
+ *
+ * const response = await fetch('https://discord.com/api/v9/users/@me', {
+ *   headers
+ * });
  */
-export async function getDiscordRequestHeaders() {
-	const token = await getDiscordToken();
-
+export function getDiscorBasedRequestHeaders() {
 	const superProperties = Buffer.from(
 		JSON.stringify({
 			os: 'Mac OS X',
@@ -64,7 +67,6 @@ export async function getDiscordRequestHeaders() {
 		Accept: '*/*',
 		Origin: 'https://discord.com',
 		'Accept-Language': 'en-US',
-		Authorization: `Bearer ${token}`,
 		'X-Debug-Options': 'bugReporterEnabled',
 		Connection: 'keep-alive',
 		Referer: 'https://discord.com/',

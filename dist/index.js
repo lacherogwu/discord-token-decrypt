@@ -88,8 +88,7 @@ async function getDiscordToken() {
   const [rawToken, key] = await Promise.all([getDiscordRawToken(), getEncryptionKey()]);
   return decrypt(rawToken, key);
 }
-async function getDiscordRequestHeaders() {
-  const token = await getDiscordToken();
+function getDiscorBasedRequestHeaders() {
   const superProperties = Buffer.from(
     JSON.stringify({
       os: "Mac OS X",
@@ -113,7 +112,6 @@ async function getDiscordRequestHeaders() {
     Accept: "*/*",
     Origin: "https://discord.com",
     "Accept-Language": "en-US",
-    Authorization: `Bearer ${token}`,
     "X-Debug-Options": "bugReporterEnabled",
     Connection: "keep-alive",
     Referer: "https://discord.com/",
@@ -130,6 +128,6 @@ async function getDiscordRequestHeaders() {
   };
 }
 export {
-  getDiscordRequestHeaders,
+  getDiscorBasedRequestHeaders,
   getDiscordToken
 };
