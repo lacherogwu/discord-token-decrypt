@@ -4,21 +4,26 @@ import { Level } from "level";
 // src/constants.ts
 import os from "node:os";
 var DISCORD_LEVELDB_PATH = `${os.homedir()}/Library/Application Support/discord/Local Storage/leveldb`;
-var DISCORD_LEVELSDB_TEMP_PATH = `${os.tmpdir()}/discord-leveldb-5b8a3726-f19a-4ab8-8097-d09bf04b6cf8`;
+var DISCORD_TMP_PREFIX = "discord-leveldb-";
 var DISCORD_TOKEN_KEY = "_https://discord.com\0token";
 
 // src/database.ts
 import fs from "node:fs/promises";
+import os2 from "node:os";
+import path from "node:path";
 async function getDiscordRawToken() {
-  await copyFolder(DISCORD_LEVELDB_PATH, DISCORD_LEVELSDB_TEMP_PATH);
-  const db = new Level(DISCORD_LEVELSDB_TEMP_PATH);
-  await db.open();
+  const tmpPath = await fs.mkdtemp(path.join(os2.tmpdir(), DISCORD_TMP_PREFIX));
+  let db;
   try {
+    await copyFolder(DISCORD_LEVELDB_PATH, tmpPath);
+    db = new Level(tmpPath);
+    await db.open();
     const token = await db.get(DISCORD_TOKEN_KEY);
     if (!token) throw new Error("Token not found");
     return token.replace(/"/g, "").slice(1);
   } finally {
-    await db.close();
+    await db?.close();
+    await fs.rm(tmpPath, { recursive: true });
   }
 }
 async function copyFolder(fromPath, toPath) {
