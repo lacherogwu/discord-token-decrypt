@@ -5,26 +5,36 @@ import { Level } from "level";
 import os from "node:os";
 var DISCORD_LEVELDB_PATH = `${os.homedir()}/Library/Application Support/discord/Local Storage/leveldb`;
 var DISCORD_TMP_PREFIX = "discord-leveldb-";
-var DISCORD_TOKEN_KEY = "_https://discord.com\0token";
+var DISCORD_KEY_PREFIX = "_https://discord.com\0";
+var DISCORD_TOKEN_KEY = `${DISCORD_KEY_PREFIX}token`;
 
 // src/database.ts
 import fs from "node:fs/promises";
 import os2 from "node:os";
 import path from "node:path";
-async function getDiscordRawToken() {
+function makeDiscordKey(key) {
+  return `${DISCORD_KEY_PREFIX}${key}`;
+}
+async function withDiscordLocalStorage(cb) {
   const tmpPath = await fs.mkdtemp(path.join(os2.tmpdir(), DISCORD_TMP_PREFIX));
   let db;
   try {
     await copyFolder(DISCORD_LEVELDB_PATH, tmpPath);
     db = new Level(tmpPath);
     await db.open();
-    const token = await db.get(DISCORD_TOKEN_KEY);
-    if (!token) throw new Error("Token not found");
-    return token.replace(/"/g, "").slice(1);
+    return await cb(db);
   } finally {
     await db?.close();
     await fs.rm(tmpPath, { recursive: true });
   }
+}
+async function getDiscordRawToken() {
+  const token = await withDiscordLocalStorage(async (db) => {
+    const token2 = await db.get(DISCORD_TOKEN_KEY);
+    if (!token2) throw new Error("Token not found");
+    return token2;
+  });
+  return token.replace(/"/g, "").slice(1);
 }
 async function copyFolder(fromPath, toPath) {
   await fs.mkdir(toPath, { recursive: true });
@@ -134,5 +144,7 @@ function getDiscorBasedRequestHeaders() {
 }
 export {
   getDiscorBasedRequestHeaders,
-  getDiscordToken
+  getDiscordToken,
+  makeDiscordKey,
+  withDiscordLocalStorage
 };

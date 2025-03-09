@@ -3,6 +3,8 @@ import { getEncryptionKey } from './keychain';
 import { decrypt } from './crypto';
 import { getSystemTimezone } from './utils';
 
+export { makeDiscordKey, withDiscordLocalStorage } from './database';
+
 /**
  * Retrieves and decrypts the Discord authentication token from the local Discord installation.
  *
