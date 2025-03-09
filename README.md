@@ -52,6 +52,54 @@ Retrieves and decrypts your Discord authentication token.
 - **Returns:**
   - Promise resolving to a string containing your Discord token
 
+### `getDiscorBasedRequestHeaders(): Object`
+
+Provides HTTP headers that mimic an official Discord client request.
+
+- **Returns:**
+  - An object containing HTTP headers for Discord API requests
+
+```typescript
+// Example: Making an authenticated request to Discord API
+import { getDiscordToken, getDiscorBasedRequestHeaders } from 'discord-token-decrypt';
+
+const headers = getDiscorBasedRequestHeaders();
+headers.Authorization = await getDiscordToken();
+
+const response = await fetch('https://discord.com/api/v9/users/@me', { headers });
+const userData = await response.json();
+```
+
+### `makeDiscordKey(key: string): string`
+
+Creates a properly formatted key for the Discord LevelDB database.
+
+- **Parameters:**
+  - `key`: The base key string to format
+- **Returns:**
+  - A complete Discord LevelDB key with the proper prefix
+
+### `withDiscordLocalStorage<T>(callback: (db: Level) => Promise<T>): Promise<T>`
+
+Provides safe access to the Discord LevelDB database by creating a temporary copy.
+
+- **Parameters:**
+  - `callback`: A function that receives the Level database instance and returns a promise
+- **Returns:**
+  - A promise resolving to the value returned by the callback
+- **Note:**
+  - Ensures proper cleanup of resources regardless of success or failure
+
+```typescript
+// Example: Reading custom data from Discord's local storage
+import { withDiscordLocalStorage, makeDiscordKey } from 'discord-token-decrypt';
+
+const customData = await withDiscordLocalStorage(async db => {
+	const key = makeDiscordKey('custom_data_key');
+	return await db.get(key).catch(() => null);
+});
+```
+
 ## How It Works
 
 This package works by:
